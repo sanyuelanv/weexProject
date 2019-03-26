@@ -9,7 +9,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 const config = require('./config');
 const UglifyJsparallelPlugin = require('webpack-uglify-parallel');
-const zipPath = fs.createWriteStream(path.join(__dirname, `../app.zip`))
+const zipPath = fs.createWriteStream(path.join(__dirname, `../../server/static/app.zip`))
 const createZip = function () {
   return new Promise(function (resolve, reject) {
     const output = zipPath

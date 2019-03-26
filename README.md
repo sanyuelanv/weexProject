@@ -3,11 +3,11 @@
   [简介见官网](https://weex.apache.org/zh/guide/introduction.html)
 ### 如何使用 `weex`
 `weex` 的使用分两种：一种是直接新创建一个 `weex` 的工程，用内置的命令去打包成一个原生安装包，这种方法是所有只会前端开发的人的最好追求。因为你不需要学习其他两门语言即可完成全平台的开发。但短板也很大，就是你只能使用官方内置或者网上开源的东西。  
-而如果你会 `Object C` , `java` , `javaScript` 和一点后端知识的话，那么打包成 `js bunld` 文件接入到原生APP去会是一个很不错的方式。而接下来我要说的就是这种方法。所有你需要懂的一点点 `Object C` ,一点点 `java` ,一点点 `javaScript` 和一点后端的知识。
+而如果你会 `Object C` , `java` , `javaScript` 和一点后端知识的话，那么打包成 `js bundle` 文件接入到原生APP去会是一个很不错的方式。而接下来我要说的就是这种方法。所有你需要懂的一点点 `Object C` ,一点点 `java` ,一点点 `javaScript` 和一点后端的知识。
 ## 基于三端的简单的框架搭建
-`weex` 打包出 `js bunld` 文件 - 压缩成 `zip` 文件并上传到静态文件服务器 - 客户端下载 `zip` 文件并解压 - 打开 `js bunld` 文件。  
+`weex` 打包出 `js bundle` 文件 - 压缩成 `zip` 文件并上传到静态文件服务器 - 客户端下载 `zip` 文件并解压 - 打开 `js bundle` 文件。  
 而基于 `weex` 在静态资源的处理上的短板（无法引入本地资源）。我们优化一下整个流程。在打包成 `zip` 文件的时候，带上需要用到的静态文件（如图片）。再通过自定义客户端关于图片的 `Handler` / `Adapter` 的处理。让我们可以用得到这些文件。
-### weex 工程文件的创建和修改
+### 1. weex 工程文件的创建和修改
 使用 `weex-toolkit` 我们可以快速创建一个 `weex` 的工程文件，但这个工程并不是我们想要的最终形态，因此我们需要把它进行一下修改。  
 进入到 `webProject` 目录里面启动 `weex`的初始化命令：目前是这里使用的是 `v1.3.11` 版本的 `weex-toolkit`  
 ```
@@ -121,11 +121,11 @@ case 'prod':
 case 'production':
   webpackConfig = require('./configs/webpack.prod.conf');
 ```
-可以看到最终的配置文件来自 `configs/webpack.prod.conf.js`。由于我们整个项目不需要打包出一个 `web` 端的页面。因此我们这个配置文件进行一些修改
+可以看到最终的配置文件来自 `web_project/configs/webpack.prod.conf.js`。由于我们整个项目不需要打包出一个 `web` 端的页面。因此我们这个配置文件进行一些修改
 ```javascript
 // 先安装依赖
 npm i --save-dev archiver clean-webpack-plugin
-// configs/webpack.prod.conf.js
+// web_project/configs/webpack.prod.conf.js
 const commonConfig = require('./webpack.common.conf');
 const webpackMerge = require('webpack-merge');
 const os = require('os');
@@ -207,7 +207,37 @@ module.exports = [weexConfig]
 
 ```
 简单总结一下这里的修改，我们先是去掉了一个 `webConfig` 的配置。增加了三个 `plugins` 分别用来删除指定打包目录（免得上一次的内容留着），把素材从指定目录复制出来，和用来压缩整个 `dist` 目录成为一个 `app.zip` 的。
-这时候我们运行一个 `npm run build:prod` 则会在 `web_project` 里面生成一个 `app.zip` 文件
+这时候我们运行一个 `npm run build:prod` 则会在 `web_project` 里面生成一个 `app.zip` 文件。
+### 2. 简单的服务器搭建
+在 `weexProject` 目录下创建一个 `server` 目录。用于建造一个简单的静态服务器，用于刚才打包好的 `app.zip` 文件的分发。
+```
+// 目录架构
+weexProject
+├── server
+└── web_project
+```
+先是使用 `npm init` 来创建一个项目，一直回车确认就可以了。然后我们需要安装两个依赖 `npm i --save-dev koa koa-static ip`。安装好了之后，创建一个 `index.js` 文件和一个 `static` 目录
+```javascript
+// weexProject/server/index.js
+const Koa = require('koa')
+const path = require('path')
+const app = new Koa()
+const ip = require('ip')
+const static = require('koa-static')
+const staticPath = './static'
+app.use(static(path.join(__dirname, staticPath)))
+app.listen(3000)
+console.log(`http://${ip.address()}:3000/static/app.zip`)
+```
+通过执行 `node index.js` 我们就拥有了一个用来下载静态文件的服务器了，到了我们只需要修改一下 `web_project/configs/webpack.prod.conf.js` 的配置文件里面的 `zipPath` 变量即可.
+```javascript
+// 旧的
+//const zipPath = fs.createWriteStream(path.join(__dirname, `../app.zip`))
+// 新的
+const zipPath = fs.createWriteStream(path.join(__dirname, `../../server/static/app.zip`))
+```
+这样下来，我们的只需要访问 `http://${ip.address()}:3000/static/app.zip` 即可获取到最新的 `zip` 包文件。
+
 
 ## Handler 接入
   ### 图片展示
