@@ -41,7 +41,12 @@ weexProject
     │   └── preview.html
     └── webpack.config.js
 ```  
-按照上面树状图删掉和创建目录和文件之后，我们还需要改造一下里面的文件。现在先写一个简单的 `demo`
+按照上面树状图删掉和创建目录和文件之后，我们可以通过修改 `web_project/package.json ` 中的 `script` 来简化我们的一些命令：
+```json
+    "build": "webpack --env.NODE_ENV=production",
+    "serve": "webpack-dev-server --env.NODE_ENV=development --progress"
+```
+最后，我们还需要改造一下里面的文件。现在先写一个简单的 `demo`
 
 ```javascript
 // web_project/src/index.vue
@@ -115,7 +120,7 @@ export default {
 };
 </script>
 ```
-这时候运行 `npm run serve` 的话，就能在浏览器看到一个不错的效果了。但这仅仅是开发时候的效果，为了让打包的时候能把这些素材带上，我们还得继续修改。查看 `package.json` 文件，我们可以发现有一条这样的命令：`"build:prod": "webpack --env.NODE_ENV=production"` 。这是再追溯到 `webpack` 的配置文件 `webpack.config.js` 里面。
+这时候运行 `npm run serve` 的话，就能在浏览器看到一个不错的效果了。但这仅仅是开发时候的效果，为了让打包的时候能把这些素材带上，我们还得继续修改。查看 `package.json` 文件，我们可以发现有一条这样的命令：`"build": "webpack --env.NODE_ENV=production"` 。这是再追溯到 `webpack` 的配置文件 `webpack.config.js` 里面。
 ```javascript
 case 'prod':
 case 'production':
@@ -207,7 +212,8 @@ module.exports = [weexConfig]
 
 ```
 简单总结一下这里的修改，我们先是去掉了一个 `webConfig` 的配置。增加了三个 `plugins` 分别用来删除指定打包目录（免得上一次的内容留着），把素材从指定目录复制出来，和用来压缩整个 `dist` 目录成为一个 `app.zip` 的。
-这时候我们运行一个 `npm run build:prod` 则会在 `web_project` 里面生成一个 `app.zip` 文件。
+这时候我们运行一个 `npm run build` 则会在 `web_project` 里面生成一个 `app.zip` 文件。
+
 ### 2. 简单的服务器搭建
 在 `weexProject` 目录下创建一个 `server` 目录。用于建造一个简单的静态服务器，用于刚才打包好的 `app.zip` 文件的分发。
 ```

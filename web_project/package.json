@@ -5,8 +5,8 @@
   "author": "",
   "private": true,
   "scripts": {
-    "build:prod": "webpack --env.NODE_ENV=production",
-    "web": "npm run serve"
+    "build": "webpack --env.NODE_ENV=production",
+    "serve": "webpack-dev-server --env.NODE_ENV=development --progress"
   },
   "keywords": [
     "weex"
